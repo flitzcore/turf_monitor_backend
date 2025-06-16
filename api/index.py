@@ -1,11 +1,61 @@
-from flask import Flask
+from flask import Flask, request, jsonify
+from pymongo import MongoClient
+from datetime import datetime, timedelta
+from bson.son import SON
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+
+# MongoDB connection
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+
+@app.route('/aggregate', methods=['POST'])
+def aggregate_data():
+    try:
+        data = request.json
+        db_name = data['db_name']
+        col_name = data['col_name']
+        view_range = int(data.get('view_range', 30))  # Default to 30 days
+
+        # Validate
+        if not db_name or not col_name:
+            return jsonify({'error': 'Missing db_name or col_name'}), 400
+
+        # Get collection
+        db = client[db_name]
+        collection = db[col_name]
+        print(collection)
+        # Date range
+        today = datetime.utcnow()
+        start_date = today - timedelta(days=view_range)
+
+        # MongoDB aggregation pipeline
+        pipeline = [
+            {"$match": {"createdAt": {"$gte": start_date}}},
+            {"$group": {
+                "_id": {
+                    "$dateToString": {"format": "%Y-%m-%d", "date": "$createdAt"}
+                },
+                "count": {"$sum": 1}
+            }},
+            {"$sort": SON([("_id", 1)])}
+        ]
+        print(pipeline)
+
+        results = list(collection.aggregate(pipeline))
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/')
 def home():
     return 'Hello, World!'
 
-@app.route('/about')
-def about():
-    return 'About'
+if __name__ == '__main__':
+    app.run(port=8080, debug=True)
