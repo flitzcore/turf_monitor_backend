@@ -91,6 +91,24 @@ def save_graph_config():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/graph-config', methods=['GET'])
+def get_graph_configs():
+    try:
+        db = client["turf_mvp"]  # or "graph_config_db" if you separated it
+        configs = list(db["graph_configs"].find())
+
+        # Convert ObjectId and datetime to string
+        for config in configs:
+            config["_id"] = str(config["_id"])
+            if "createdAt" in config:
+                config["createdAt"] = config["createdAt"].isoformat()
+        
+        return jsonify(configs)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/')
 def home():
     return 'Hello, World!'
