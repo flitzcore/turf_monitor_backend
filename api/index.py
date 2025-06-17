@@ -34,9 +34,13 @@ def aggregate_data():
         today = datetime.utcnow()
         start_date = today - timedelta(days=view_range)
 
+        # Build match query
+        match_query = data.get('match', {})
+        match_query["createdAt"] = {"$gte": start_date}
+
         # MongoDB aggregation pipeline
         pipeline = [
-            {"$match": {"createdAt": {"$gte": start_date}}},
+            {"$match": match_query},
             {"$group": {
                 "_id": {
                     "$dateToString": {"format": "%Y-%m-%d", "date": "$createdAt"}
