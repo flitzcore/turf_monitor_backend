@@ -58,6 +58,39 @@ def aggregate_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/graph-config', methods=['POST'])
+def save_graph_config():
+    try:
+        data = request.json
+
+        # Basic validation
+        required_fields = ["title", "chartType", "database", "collection", "dateRange", "match"]
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing field: {field}"}), 400
+
+        config = {
+            "title": data["title"],
+            "chartType": data["chartType"],
+            "database": data["database"],
+            "collection": data["collection"],
+            "dateRange": data["dateRange"],
+            "match": data["match"],
+            "createdAt": datetime.utcnow()
+        }
+
+        # Save to MongoDB
+        db = client["turf_mvp"]  # or any common config DB like "config_db"
+        result = db["monitor_configs"].insert_one(config)
+
+        return jsonify({
+            "message": "Graph config saved",
+            "id": str(result.inserted_id)
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/')
 def home():
     return 'Hello, World!'
