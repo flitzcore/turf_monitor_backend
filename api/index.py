@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 from bson.son import SON
+from bson.objectid import ObjectId
 import os
 from flask_cors import CORS 
 from dotenv import load_dotenv
@@ -108,6 +109,17 @@ def get_graph_configs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/graph-config/<config_id>', methods=['DELETE'])
+def delete_graph_config(config_id):
+    try:
+        db = client["turf_mvp"]
+        result = db["monitor_configs"].delete_one({"_id": ObjectId(config_id)})
+        if result.deleted_count == 1:
+            return jsonify({"message": "Config deleted"}), 200
+        else:
+            return jsonify({"error": "Config not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/')
 def home():
