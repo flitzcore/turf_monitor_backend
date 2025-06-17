@@ -95,7 +95,7 @@ def save_graph_config():
 def get_graph_configs():
     try:
         db = client["turf_mvp"]  # or "graph_config_db" if you separated it
-        configs = list(db["graph_configs"].find())
+        configs = list(db["monitor_configs"].find())
 
         # Convert ObjectId and datetime to string
         for config in configs:
