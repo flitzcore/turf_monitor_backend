@@ -6,8 +6,8 @@ import os
 from flask_cors import CORS 
 from dotenv import load_dotenv
 
-from api.config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
-from api.services.graph import count_data_by_day
+from config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
+from services.graph import count_data_by_day
 
 load_dotenv()
 

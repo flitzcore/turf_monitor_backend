@@ -1,7 +1,7 @@
 from flask import jsonify
 from datetime import datetime, timedelta
 from bson.son import SON
-from api.config import client
+from config import client
 
 def count_data_by_day(db_name, col_name, view_range=30, match_query={}):
     try:
