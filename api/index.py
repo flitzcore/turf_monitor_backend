@@ -5,7 +5,11 @@ from bson.objectid import ObjectId
 import os
 from flask_cors import CORS 
 from dotenv import load_dotenv
+import sys
+import os
 
+# Dynamically add the parent dir of `index.py` (i.e., `api/`) to sys.path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
 from services.graph import count_data_by_day
 
