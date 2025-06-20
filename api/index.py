@@ -24,7 +24,7 @@ def latest_news():
         period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
 
         # Fetch metrics
-        metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "scrapper"})
+        metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "scrapper", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'scrapper', period, {})
 
         # Convert to dict keyed by date
@@ -66,7 +66,7 @@ def latest_jobs():
         period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
 
         # Fetch metrics
-        metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "jobsearch"})
+        metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "jobsearch", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'theirstack', period, {})
 
         # Convert to dict keyed by date
