@@ -50,9 +50,9 @@ def latest_news():
 
         return jsonify({
             "metadata": {
-                "metrics1": {"color": "red", "label": "datasources"},
-                "metrics2": {"color": "blue", "label": "raw data"},
-                "metrics3": {"color": "green", "label": "percentage"}
+                "metrics1": { "color": "#F97316", "label": "Cleaned Data" },
+                "metrics2": { "color": "#3B82F6", "label": "Raw Data" },
+                "metrics3": { "color": "#10B981", "label": "Percentage (%)" }
             },
             "data": combined_data
         })
