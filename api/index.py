@@ -281,6 +281,15 @@ def error_logs():
                 "metrics5": { "color": "#A78BFA", "label": "Apollo" },
                 "metrics6": { "color": "#FACC15", "label": "Other" }
             },
+            "statistics": {
+                "total_scrapper": sum(item["metrics1"] for item in combined_data),
+                "total_jobsearch": sum(item["metrics2"] for item in combined_data),
+                "total_transcript": sum(item["metrics3"] for item in combined_data),
+                "total_edgar": sum(item["metrics4"] for item in combined_data),
+                "total_apollo": sum(item["metrics5"] for item in combined_data),
+                "total_other": sum(item["metrics6"] for item in combined_data),
+                "total_error": sum(item["metrics1"] + item["metrics2"] + item["metrics3"] + item["metrics4"] + item["metrics5"] + item["metrics6"] for item in combined_data)
+            },
             "data": combined_data
         })
 
