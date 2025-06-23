@@ -54,6 +54,17 @@ def latest_news():
                 "metrics2": { "color": "#3B82F6", "label": "Raw Data" },
                 "metrics3": { "color": "#10B981", "label": "Percentage (%)" }
             },
+            "statistics": {
+                "total_cleaned_data": sum(item["metrics1"] for item in combined_data),
+                "total_raw_data": sum(item["metrics2"] for item in combined_data),
+                "min_cleaned_data": min((item["metrics1"] for item in combined_data), default=0),
+                "min_raw_data": min((item["metrics2"] for item in combined_data), default=0),
+                "max_cleaned_data": max((item["metrics1"] for item in combined_data), default=0),
+                "max_raw_data": max((item["metrics2"] for item in combined_data), default=0),
+                "average_cleaned_data": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+                "average_raw_data": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+              
+            },
             "data": combined_data
         })
 
@@ -95,6 +106,17 @@ def latest_jobs():
                 "metrics1": { "color": "#F97316", "label": "Cleaned Data" },
                 "metrics2": { "color": "#3B82F6", "label": "Raw Data" },
                 "metrics3": { "color": "#10B981", "label": "Percentage (%)" }
+            },
+            "statistics": {
+                "total_cleaned_data": sum(item["metrics1"] for item in combined_data),
+                "total_raw_data": sum(item["metrics2"] for item in combined_data),
+                "min_cleaned_data": min((item["metrics1"] for item in combined_data), default=0),
+                "min_raw_data": min((item["metrics2"] for item in combined_data), default=0),
+                "max_cleaned_data": max((item["metrics1"] for item in combined_data), default=0),
+                "max_raw_data": max((item["metrics2"] for item in combined_data), default=0),
+                "average_cleaned_data": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+                "average_raw_data": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+              
             },
             "data": combined_data
         })
@@ -138,6 +160,17 @@ def latest_transcripts():
                 "metrics2": { "color": "#3B82F6", "label": "Raw Data" },
                 "metrics3": { "color": "#10B981", "label": "Percentage (%)" }
             },
+            "statistics": {
+                "total_cleaned_data": sum(item["metrics1"] for item in combined_data),
+                "total_raw_data": sum(item["metrics2"] for item in combined_data),
+                "min_cleaned_data": min((item["metrics1"] for item in combined_data), default=0),
+                "min_raw_data": min((item["metrics2"] for item in combined_data), default=0),
+                "max_cleaned_data": max((item["metrics1"] for item in combined_data), default=0),
+                "max_raw_data": max((item["metrics2"] for item in combined_data), default=0),
+                "average_cleaned_data": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+                "average_raw_data": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+              
+            },
             "data": combined_data
         })
 
@@ -180,6 +213,17 @@ def latest_fillings():
                 "metrics1": { "color": "#F97316", "label": "Cleaned Data" },
                 "metrics2": { "color": "#3B82F6", "label": "Raw Data" },
                 "metrics3": { "color": "#10B981", "label": "Percentage (%)" }
+            },
+            "statistics": {
+                "total_cleaned_data": sum(item["metrics1"] for item in combined_data),
+                "total_raw_data": sum(item["metrics2"] for item in combined_data),
+                "min_cleaned_data": min((item["metrics1"] for item in combined_data), default=0),
+                "min_raw_data": min((item["metrics2"] for item in combined_data), default=0),
+                "max_cleaned_data": max((item["metrics1"] for item in combined_data), default=0),
+                "max_raw_data": max((item["metrics2"] for item in combined_data), default=0),
+                "average_cleaned_data": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+                "average_raw_data": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+              
             },
             "data": combined_data
         })
