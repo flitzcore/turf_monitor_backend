@@ -114,7 +114,7 @@ def aggregate_bad_news_model_stats(view_range=30):
         }
 
     stats = {
-        "gpt_4_1": get_stats(gpt_4_1_counts),
+        "gpt_4.1": get_stats(gpt_4_1_counts),
         "gpt_4o_mini": get_stats(gpt_4o_mini_counts),
     }
 
