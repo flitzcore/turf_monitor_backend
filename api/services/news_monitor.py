@@ -90,7 +90,9 @@ def aggregate_bad_news_model_stats(view_range=30):
 
     results = list(companies_col.aggregate(pipeline))
 
-    # Flatten counts
+    # Flatten counts and collect for stats
+    gpt_4_1_counts = []
+    gpt_4o_mini_counts = []
     for item in results:
         item["gpt_4_1_count"] = item["gpt_4_1"][0]["count"] if item["gpt_4_1"] else 0
         item["gpt_4o_mini_count"] = item["gpt_4o_mini"][0]["count"] if item["gpt_4o_mini"] else 0
@@ -100,8 +102,27 @@ def aggregate_bad_news_model_stats(view_range=30):
         # Convert ObjectId to string for JSON serialization
         if "company_id" in item:
             item["company_id"] = str(item["company_id"])
+        gpt_4_1_counts.append(item["gpt_4_1_count"])
+        gpt_4o_mini_counts.append(item["gpt_4o_mini_count"])
 
-    return results
+    def get_stats(counts):
+        return {
+            "total": sum(counts),
+            "average": sum(counts) / len(counts) if counts else 0,
+            "max": max(counts) if counts else 0,
+            "min": min(counts) if counts else 0,
+        }
+
+    stats = {
+        "gpt_4_1": get_stats(gpt_4_1_counts),
+        "gpt_4o_mini": get_stats(gpt_4o_mini_counts),
+    }
+
+    return {
+        "data": results,
+        "statistics": stats
+        
+    }
 
 if __name__ == "__main__":
     from pprint import pprint
