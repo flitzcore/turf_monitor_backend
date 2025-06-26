@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
 from services.graph import count_data_by_day 
 from services.news_monitor import aggregate_bad_news_model_stats
+from services.companies_monitor import get_company_monitor
 load_dotenv()
 
 app = Flask(__name__)
@@ -26,7 +27,14 @@ def bad_news_model_stats():
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
+
+@app.route('/table/incomplete-companies', methods=['GET'])
+def incomplete_companies():
+    try:
+        data = get_company_monitor()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/graph/latest-news', methods=['GET'])
 def latest_news():
