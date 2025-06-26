@@ -85,7 +85,7 @@ def aggregate_bad_news_model_stats(view_range=30):
                 }
             }
         }},
-        {"$sort": {"date_obj": 1}}  # ✅ Final sort by actual date
+        {"$sort": {"date_obj": -1}}  # ✅ Final sort by actual date
     ]
 
     results = list(companies_col.aggregate(pipeline))
