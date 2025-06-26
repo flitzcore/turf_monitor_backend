@@ -11,12 +11,22 @@ import os
 # Dynamically add the parent dir of `index.py` (i.e., `api/`) to sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
-from services.graph import count_data_by_day
-
+from services.graph import count_data_by_day 
+from services.news_monitor import aggregate_bad_news_model_stats
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app) 
+
+@app.route('/table/bad-news-model-stats', methods=['GET'])
+def bad_news_model_stats():
+    try:
+        period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
+        data = aggregate_bad_news_model_stats(period)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 
 @app.route('/graph/latest-news', methods=['GET'])
 def latest_news():
