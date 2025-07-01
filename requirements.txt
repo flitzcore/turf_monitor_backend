@@ -2,3 +2,4 @@ Flask==3.0.3
 pymongo
 dotenv
 flask-cors
+python-dateutil
