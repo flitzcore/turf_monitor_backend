@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from datetime import datetime, timedelta
 from bson.son import SON
 from bson.objectid import ObjectId
@@ -7,6 +7,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import sys
 import os
+import pandas as pd
+import io
 
 # Dynamically add the parent dir of `index.py` (i.e., `api/`) to sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -15,10 +17,61 @@ from services.graph import count_data_by_day
 from services.news_monitor import aggregate_bad_news_model_stats
 from services.companies_monitor import get_company_monitor
 from services.point_data import get_edgar_data_by_date
+from services.contacts_monitor import aggregate_contacts_stats
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app) 
+
+@app.route('/download/contacts-stats', methods=['GET'])
+def contacts_stats():
+    try:
+        period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
+        data = aggregate_contacts_stats(period)
+      
+        df = pd.DataFrame(data)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='ContactsStats')
+            workbook = writer.book
+            worksheet = writer.sheets['ContactsStats']
+
+            from openpyxl.styles import Font, PatternFill, Alignment
+            # Header style
+            header_font = Font(bold=True, color='FFFFFF')
+            header_fill = PatternFill(start_color='4F81BD', end_color='4F81BD', fill_type='solid')
+            center_alignment = Alignment(horizontal='center', vertical='center')
+
+            # Apply header style
+            for cell in worksheet[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_alignment
+
+            # Auto-fit column widths and center-align all cells
+            for col in worksheet.columns:
+                max_length = 0
+                col_letter = col[0].column_letter
+                for cell in col:
+                    try:
+                        cell.alignment = center_alignment
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                    except Exception:
+                        pass
+                adjusted_width = (max_length + 2)
+                worksheet.column_dimensions[col_letter].width = adjusted_width
+
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'contacts_stats_{period}_days.xlsx'
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/table/edgar-points', methods=['GET'])
 def edgar_points():

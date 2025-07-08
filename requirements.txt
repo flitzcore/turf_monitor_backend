@@ -3,3 +3,5 @@ pymongo
 dotenv
 flask-cors
 python-dateutil
+pandas
+openpyxl
