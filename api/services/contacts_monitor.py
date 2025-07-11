@@ -58,7 +58,7 @@ def aggregate_contacts_stats(period:str):
     final_results = []
 
     for doc in vt_results:
-        print(doc)
+        
         for vt_contact in doc["vt_contacts"]:
             try:
                 temp_results = {
