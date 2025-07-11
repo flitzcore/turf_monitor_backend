@@ -58,6 +58,7 @@ def aggregate_contacts_stats(period:str):
     final_results = []
 
     for doc in vt_results:
+        print(doc)
         for vt_contact in doc["vt_contacts"]:
             try:
                 temp_results = {
@@ -67,8 +68,9 @@ def aggregate_contacts_stats(period:str):
                     "vt_title": doc["vt_title"],
                     "contact_name": vt_contact["name"],
                     "contact_email": vt_contact["email"],
+                    "contact_linkedin_url": vt_contact["linkedin_url"] or '',
                     "contact_id": vt_contact["contact_id"],
-                    
+                   
                 }
                 contact_data = contacts_collection.find_one(
                     {"_id": ObjectId(vt_contact["contact_id"])}
