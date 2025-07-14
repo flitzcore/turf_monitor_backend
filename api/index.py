@@ -98,6 +98,37 @@ def incomplete_companies():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/graph/latest-contacts', methods=['GET'])
+def latest_contacts():
+    try:
+        period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
+        metrics_1 = count_data_by_day('turf_mvp', 'contacts', period, {})
+        m1_map = {item["_id"]: item["count"] for item in metrics_1}
+        all_dates = sorted(set(m1_map.keys()))
+        combined_data = []
+        for date in all_dates:
+            m1 = m1_map.get(date, 0)
+
+            combined_data.append({
+                "_id": date,
+                    "metrics1": m1,
+            })
+        return jsonify({
+            "metadata": {
+                "metrics1": { "color": "#F97316", "label": "Contacts Gathered" },
+
+            },
+            "statistics": {
+                "total_<metrics1>": sum(item["metrics1"] for item in combined_data),
+                "min_<metrics1>": min((item["metrics1"] for item in combined_data), default=0),
+                "max_<metrics1>": max((item["metrics1"] for item in combined_data), default=0),
+                "average_<metrics1>": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+              
+            },
+            "data": combined_data
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/graph/latest-news', methods=['GET'])
 def latest_news():
     try:
