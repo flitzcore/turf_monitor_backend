@@ -1,0 +1,33 @@
+{
+  "_id": {
+    "$oid": "68508c066cf83e50b686bbb8"
+  },
+
+  "coresignal_data": {
+    "id": 802737870,
+
+    "active_experience_company_id": 98268294,
+    "active_experience_title": "Co-founder",
+    "active_experience_description": "• Co-founded a startup with friends Joseph Larimore and Timothy Granberry, currently in the process of launching an LLC with a purchased domain and website development in progress. • Collaborated with co-founders to strategize and plan business operations for the upcoming launch. • Developed skills in entrepreneurship, project management, and website development through hands-on experience.",
+    "active_experience_department": "C-Suite",
+    "active_experience_management_level": "Founder",
+    "is_decision_maker": 1,
+    "total_experience_duration_months": 41,
+
+    "experience": [
+      {
+        "active_experience": 1,
+        "position_title": "Co-founder",
+        "department": "C-Suite",
+        "management_level": "Founder"
+      },
+      {
+        "active_experience": 1,
+        "position_title": "Director Of Bell Operations",
+        "department": null,
+        "management_level": null
+      }
+    ]
+  },
+  "__v": 1
+}

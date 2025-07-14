@@ -17,7 +17,7 @@ from services.graph import count_data_by_day
 from services.news_monitor import aggregate_bad_news_model_stats
 from services.companies_monitor import get_company_monitor
 from services.point_data import get_edgar_data_by_date
-from services.contacts_monitor import aggregate_contacts_stats
+from services.contacts_monitor import aggregate_contacts_stats, count_contacts_data_by_day
 load_dotenv()
 
 app = Flask(__name__)
@@ -94,6 +94,15 @@ def bad_news_model_stats():
 def incomplete_companies():
     try:
         data = get_company_monitor()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/contacts-data', methods=['GET'])
+def contacts_data():
+    try:
+        period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
+        data = count_contacts_data_by_day(period)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

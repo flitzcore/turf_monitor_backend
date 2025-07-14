@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 from config import client  # your existing client
 from bson import ObjectId
-
+from bson.son import SON
 def convert_object_ids(obj):
     if isinstance(obj, list):
         return [convert_object_ids(item) for item in obj]
@@ -15,6 +15,49 @@ def convert_object_ids(obj):
         return str(obj)
     else:
         return obj
+    
+
+
+def count_contacts_data_by_day(view_range=30):
+    try:
+        db = client["turf_mvp"]
+        collection = db["contacts"]
+
+        # Date range
+        today = datetime.utcnow()
+        start_date = today - timedelta(days=view_range)
+
+
+        pipeline = [
+            {"$match": {"createdAt": {"$gte": start_date},
+                   "email": {"$exists": True, "$ne": None}     
+                        }},
+            {"$addFields": {
+                "activeExperiences": {
+                    "$filter": {
+                        "input": "$coresignal_data.experience",
+                        "as": "exp",
+                        "cond": {"$eq": ["$$exp.active_experience", 1]}
+                    }
+                }
+            }},
+            {"$match": {
+                "activeExperiences.1": {"$exists": True}  # means at least 2 active ones
+            }},
+            {"$group": {
+                "_id": {
+                    "$dateToString": {"format": "%Y-%m-%d", "date": "$createdAt"}
+                },
+                "count": {"$sum": 1}
+            }},
+            {"$sort": SON([("_id", 1)])}
+        ]
+
+        results = list(collection.aggregate(pipeline))
+        return results
+
+    except Exception as e:
+        raise Exception(f'error count_data_by_day: {e}')
 def aggregate_contacts_stats(period:str):
     db = client["turf_mvp"]
     vt_collection = db["companyvaluetriggers"]
