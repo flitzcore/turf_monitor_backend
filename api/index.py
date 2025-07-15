@@ -23,6 +23,43 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app) 
 
+def combine_metrics_with_filled_dates(metrics_list, period):
+    """
+    Combine multiple metrics and ensure all dates in the period are present with 0 values for missing dates.
+    
+    Args:
+        metrics_list: List of metric data (each should have "_id" and "count" keys)
+        period: Number of days to look back
+    
+    Returns:
+        Combined data with all dates filled
+    """
+    # Generate all dates in the range
+    today = datetime.utcnow()
+    start_date = today - timedelta(days=period)
+    
+    all_dates = []
+    current_date = start_date
+    while current_date <= today:
+        all_dates.append(current_date.strftime("%Y-%m-%d"))
+        current_date += timedelta(days=1)
+    
+    # Convert each metric to dict for easy lookup
+    metrics_maps = []
+    for metrics in metrics_list:
+        metrics_map = {item["_id"]: item["count"] for item in metrics}
+        metrics_maps.append(metrics_map)
+    
+    # Combine into final structure
+    combined_data = []
+    for date in all_dates:
+        data_point = {"_id": date}
+        for i, metrics_map in enumerate(metrics_maps):
+            data_point[f"metrics{i+1}"] = metrics_map.get(date, 0)
+        combined_data.append(data_point)
+    
+    return combined_data
+
 @app.route('/download/contacts-stats', methods=['GET'])
 def contacts_stats():
     try:
@@ -107,32 +144,35 @@ def contacts_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/graph/latest-contacts', methods=['GET'])
+@app.route('/graph/contacts', methods=['GET'])
 def latest_contacts():
     try:
         period = int(request.args.get('period', DEFAULT_VIEW_RANGE))
         metrics_1 = count_data_by_day('turf_mvp', 'contacts', period, {})
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        all_dates = sorted(set(m1_map.keys()))
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-
-            combined_data.append({
-                "_id": date,
-                    "metrics1": m1,
-            })
+        metrics_2 = count_data_by_day('turf_mvp', 'contacts', period, {"email": None})
+        metrics_3 = count_contacts_data_by_day(period)
+        
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2, metrics_3], period)
+        
         return jsonify({
             "metadata": {
                 "metrics1": { "color": "#F97316", "label": "Contacts Gathered" },
-
+                "metrics2": { "color": "#3B82F6", "label": "Contacts without Email" },
+                "metrics3": { "color": "#10B981", "label": "Contacts with multiple active experience" }
             },
             "statistics": {
                 "total_<metrics1>": sum(item["metrics1"] for item in combined_data),
+                "total_<metrics2>": sum(item["metrics2"] for item in combined_data),
+                "total_<metrics3>": sum(item["metrics3"] for item in combined_data),
                 "min_<metrics1>": min((item["metrics1"] for item in combined_data), default=0),
+                "min_<metrics2>": min((item["metrics2"] for item in combined_data), default=0),
+     
                 "max_<metrics1>": max((item["metrics1"] for item in combined_data), default=0),
+                "max_<metrics2>": max((item["metrics2"] for item in combined_data), default=0),
+    
                 "average_<metrics1>": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
-              
+                "average_<metrics2>": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
             },
             "data": combined_data
         })
@@ -147,26 +187,14 @@ def latest_news():
         metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "scrapper", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'scrapper', period, {})
 
-        # Convert to dict keyed by date
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        m2_map = {item["_id"]: item["count"] for item in metrics_2}
-
-        # Union of all dates
-        all_dates = sorted(set(m1_map.keys()) | set(m2_map.keys()))
-
-        # Combine into final structure
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-            m2 = m2_map.get(date, 0)
-            m3 = round((m1 / m2) * 100, 2) if m2 else 0
-
-            combined_data.append({
-                "_id": date,
-                "metrics1": m1,
-                "metrics2": m2,
-                "metrics3": m3
-            })
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2], period)
+        
+        # Calculate percentage for metrics3
+        for item in combined_data:
+            m1 = item["metrics1"]
+            m2 = item["metrics2"]
+            item["metrics3"] = round((m1 / m2) * 100, 2) if m2 else 0
 
         return jsonify({
             "metadata": {
@@ -200,26 +228,14 @@ def latest_jobs():
         metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "jobsearch", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'theirstack', period, {})
 
-        # Convert to dict keyed by date
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        m2_map = {item["_id"]: item["count"] for item in metrics_2}
-
-        # Union of all dates
-        all_dates = sorted(set(m1_map.keys()) | set(m2_map.keys()))
-
-        # Combine into final structure
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-            m2 = m2_map.get(date, 0)
-            m3 = round((m1 / m2) * 100, 2) if m2 else 0
-
-            combined_data.append({
-                "_id": date,
-                "metrics1": m1,
-                "metrics2": m2,
-                "metrics3": m3
-            })
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2], period)
+        
+        # Calculate percentage for metrics3
+        for item in combined_data:
+            m1 = item["metrics1"]
+            m2 = item["metrics2"]
+            item["metrics3"] = round((m1 / m2) * 100, 2) if m2 else 0
 
         return jsonify({
             "metadata": {
@@ -253,26 +269,14 @@ def latest_transcripts():
         metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "transcript", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'koyfin_transcript', period, {})
 
-        # Convert to dict keyed by date
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        m2_map = {item["_id"]: item["count"] for item in metrics_2}
-
-        # Union of all dates
-        all_dates = sorted(set(m1_map.keys()) | set(m2_map.keys()))
-
-        # Combine into final structure
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-            m2 = m2_map.get(date, 0)
-            m3 = round((m1 / m2) * 100, 2) if m2 else 0
-
-            combined_data.append({
-                "_id": date,
-                "metrics1": m1,
-                "metrics2": m2,
-                "metrics3": m3
-            })
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2], period)
+        
+        # Calculate percentage for metrics3
+        for item in combined_data:
+            m1 = item["metrics1"]
+            m2 = item["metrics2"]
+            item["metrics3"] = round((m1 / m2) * 100, 2) if m2 else 0
 
         return jsonify({
             "metadata": {
@@ -307,26 +311,14 @@ def latest_fillings():
         metrics_1 = count_data_by_day('turf_mvp', 'datasources', period, {"type": "edgar", "status": "Active"})
         metrics_2 = count_data_by_day('turf_prototype', 'edgar_file', period, {})
 
-        # Convert to dict keyed by date
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        m2_map = {item["_id"]: item["count"] for item in metrics_2}
-
-        # Union of all dates
-        all_dates = sorted(set(m1_map.keys()) | set(m2_map.keys()))
-
-        # Combine into final structure
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-            m2 = m2_map.get(date, 0)
-            m3 = round((m1 / m2) * 100, 2) if m2 else 0
-
-            combined_data.append({
-                "_id": date,
-                "metrics1": m1,
-                "metrics2": m2,
-                "metrics3": m3
-            })
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2], period)
+        
+        # Calculate percentage for metrics3
+        for item in combined_data:
+            m1 = item["metrics1"]
+            m2 = item["metrics2"]
+            item["metrics3"] = round((m1 / m2) * 100, 2) if m2 else 0
 
         return jsonify({
             "metadata": {
@@ -363,34 +355,9 @@ def error_logs():
         metrics_4 = count_data_by_day('turf_mvp', 'loggers', period, {"source_type": "edgar", "status": "error"})
         metrics_5 = count_data_by_day('turf_mvp', 'loggers', period, {"source_type": "apollo", "status": "error"})
         metrics_6 = count_data_by_day('turf_mvp', 'loggers', period, {"source_type": {"$nin": ["scrapper", "jobsearch", "transcript", "edgar", "apollo"]}, "status": "error"})
-        # Convert to dict keyed by date
-        m1_map = {item["_id"]: item["count"] for item in metrics_1}
-        m2_map = {item["_id"]: item["count"] for item in metrics_2}
-        m3_map = {item["_id"]: item["count"] for item in metrics_3}
-        m4_map = {item["_id"]: item["count"] for item in metrics_4}
-        m5_map = {item["_id"]: item["count"] for item in metrics_5}
-        m6_map = {item["_id"]: item["count"] for item in metrics_6}
-        # Union of all dates
-        all_dates = sorted(set(m1_map.keys()) | set(m2_map.keys()) | set(m3_map.keys()) | set(m4_map.keys()) | set(m5_map.keys()) | set(m6_map.keys()))
-
-        # Combine into final structure
-        combined_data = []
-        for date in all_dates:
-            m1 = m1_map.get(date, 0)
-            m2 = m2_map.get(date, 0)
-            m3 = m3_map.get(date, 0)
-            m4 = m4_map.get(date, 0)
-            m5 = m5_map.get(date, 0)
-            m6 = m6_map.get(date, 0)
-            combined_data.append({
-                "_id": date,
-                "metrics1": m1,
-                "metrics2": m2,
-                "metrics3": m3,
-                "metrics4": m4,
-                "metrics5": m5,
-                "metrics6": m6
-            })
+        
+        # Use the helper function to combine metrics and fill missing dates
+        combined_data = combine_metrics_with_filled_dates([metrics_1, metrics_2, metrics_3, metrics_4, metrics_5, metrics_6], period)
 
         return jsonify({
             "metadata": {
