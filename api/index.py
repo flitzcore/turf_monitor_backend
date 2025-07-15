@@ -167,13 +167,15 @@ def latest_contacts():
                 "total_<metrics3>": sum(item["metrics3"] for item in combined_data),
                 "min_<metrics1>": min((item["metrics1"] for item in combined_data), default=0),
                 "min_<metrics2>": min((item["metrics2"] for item in combined_data), default=0),
+                "min_<metrics3>": min((item["metrics3"] for item in combined_data), default=0),
      
                 "max_<metrics1>": max((item["metrics1"] for item in combined_data), default=0),
                 "max_<metrics2>": max((item["metrics2"] for item in combined_data), default=0),
-    
+                "max_<metrics3>": max((item["metrics3"] for item in combined_data), default=0),
                 "average_<metrics1>": round(sum(item["metrics1"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
                 "average_<metrics2>": round(sum(item["metrics2"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
-            },
+                "average_<metrics3>": round(sum(item["metrics3"] for item in combined_data) / len(combined_data), 2) if combined_data else 0,
+                },
             "data": combined_data
         })
     except Exception as e:
