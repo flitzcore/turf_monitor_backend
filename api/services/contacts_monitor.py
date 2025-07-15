@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from config import client  # your existing client
 from bson import ObjectId
 from bson.son import SON
-
+from collections import defaultdict
 def fill_missing_dates(data, view_range=30):
     """
     Fill missing dates in the data with 0 values.
@@ -51,8 +51,67 @@ def convert_object_ids(obj):
     else:
         return obj
     
+def count_vt_contacts_exp(view_range: int = 30):
+    db = client["turf_mvp"]
+    vt_collection = db["companyvaluetriggers"]
+    contacts_collection = db["contacts"]
 
+    today = datetime.utcnow()
+    start_date = today - timedelta(days=view_range)
 
+    pipeline = [
+        {
+            "$match": {
+                "vt_contacts": {"$exists": True, "$ne": []},
+                "createdAt": {"$gte": start_date}
+            }
+        },
+        {
+            "$project": {
+                "createdAt": 1,
+                "vt_contacts": 1
+            }
+        }
+    ]
+
+    vt_results = list(vt_collection.aggregate(pipeline))
+
+    counts_by_day = defaultdict(int)
+
+    for doc in vt_results:
+        created_at = doc.get("createdAt")
+        if not created_at:
+            continue
+
+        date_str = created_at.strftime("%Y-%m-%d")
+
+        for vt_contact in doc["vt_contacts"]:
+            try:
+                # safely extract fields
+                contact_id = vt_contact["contact_id"] if "contact_id" in vt_contact else None
+                current_role = vt_contact.get("current_role")
+                email = vt_contact.get("email")
+
+                if not contact_id or not current_role or not email:
+                    continue
+
+                # contact_id is ObjectId — do not call .get on it
+                contact_doc = contacts_collection.find_one({"_id": ObjectId(contact_id)})
+                if not contact_doc:
+                    continue
+
+                experiences = contact_doc.get("coresignal_data", {}).get("experience", [])
+                for exp in experiences:
+                    if exp.get("position_title") == current_role:
+                        if exp.get("order_in_profile", 1) > 1:
+                            counts_by_day[date_str] += 1
+                        break
+
+            except Exception as e:
+                print(f"Error processing contact: {e}")
+                continue
+
+    return [{"_id": date, "count": count} for date, count in sorted(counts_by_day.items())]
 def count_contacts_data_by_day(view_range=30):
     try:
         db = client["turf_mvp"]
