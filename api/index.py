@@ -14,7 +14,7 @@ import io
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import client, DEFAULT_VIEW_RANGE, DEFAULT_PORT, DEBUG_MODE
 from services.graph import count_data_by_day 
-from services.news_monitor import aggregate_bad_news_model_stats
+from services.news_monitor import aggregate_bad_news_model_stats, aggregate_total_news_daily
 from services.companies_monitor import get_company_monitor
 from services.point_data import get_edgar_data_by_date
 from services.contacts_monitor import aggregate_contacts_stats, count_contacts_data_by_day,count_vt_contacts_exp
@@ -131,6 +131,26 @@ def bad_news_model_stats():
 def incomplete_companies():
     try:
         data = get_company_monitor()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/table/total-news-daily', methods=['GET'])
+def total_news_daily():
+    try:
+        # Get pagination parameters from query string
+        page = request.args.get('page', default=1, type=int)
+        page_size = request.args.get('page_size', default=10, type=int)
+        
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if page_size < 1:
+            page_size = 10
+        if page_size > 100:  # Optional: set a maximum page size
+            page_size = 100
+        
+        data = aggregate_total_news_daily(page=page, page_size=page_size)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -2,6 +2,103 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 from config import client  # assume this is your client instance
 
+def aggregate_total_news_daily(page=1, page_size=10):
+    db = client["turf_mvp"]
+    companies_col = db["companies"]
+    
+    # Get today's date string for comparison
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    
+    # Calculate skip value for pagination
+    skip = (page - 1) * page_size
+    
+    pipeline = [
+        {
+            "$match": {"status": "Active"}
+        },
+        {
+            "$sort": {"name": 1}  # Sort alphabetically by name
+        },
+        {
+            "$skip": skip  # Pagination: skip to current page
+        },
+        {
+            "$limit": page_size  # Pagination: limit to page size
+        },
+        {
+            "$lookup": {
+                "from": "status",
+                "let": {"companyIdStr": {"$toString": "$_id"}},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {
+                                "$and": [
+                                    {"$eq": ["$type", "news_count"]},
+                                    {"$eq": ["$name", "$$companyIdStr"]},
+                                    {
+                                        "$eq": [
+                                            {
+                                                "$dateToString": {"format": "%Y-%m-%d", "date": "$createdAt"}
+                                            },
+                                            today_str
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$project": {"value": 1, "_id": 0}
+                    }
+                ],
+                "as": "status_docs"
+            }
+        },
+        {
+            "$addFields": {
+                "news_count": {
+                    "$ifNull": [{"$arrayElemAt": ["$status_docs.value", 0]}, 0]
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "company_id": "$_id",
+                "name": 1,
+                "news_count": 1
+            }
+        }
+    ]
+    
+    # Get total count for pagination info
+    count_pipeline = [{"$match": {"status": "Active"}}, {"$count": "total"}]
+    count_result = list(companies_col.aggregate(count_pipeline))
+    total_count = count_result[0]["total"] if count_result else 0
+    
+    results = list(companies_col.aggregate(pipeline))
+    
+    # Convert ObjectId to string for JSON serialization
+    for item in results:
+        if "company_id" in item:
+            item["company_id"] = str(item["company_id"])
+    
+    # Calculate pagination metadata
+    total_pages = (total_count + page_size - 1) // page_size  # Ceiling division
+    
+    return {
+        "data": results,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total_items": total_count,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_previous": page > 1
+        }
+    }
+
 def aggregate_bad_news_model_stats(view_range=30):
     db = client["turf_mvp"]
     companies_col = db["companies"]
