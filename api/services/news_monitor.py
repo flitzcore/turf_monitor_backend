@@ -16,15 +16,7 @@ def aggregate_total_news_daily(page=1, page_size=10):
         {
             "$match": {"status": "Active"}
         },
-        {
-            "$sort": {"name": 1}  # Sort alphabetically by name
-        },
-        {
-            "$skip": skip  # Pagination: skip to current page
-        },
-        {
-            "$limit": page_size  # Pagination: limit to page size
-        },
+       
         {
             "$lookup": {
                 "from": "status",
@@ -69,7 +61,16 @@ def aggregate_total_news_daily(page=1, page_size=10):
                 "name": 1,
                 "news_count": 1
             }
-        }
+        },
+         {
+            "$sort": {"news_count": -1}  # Sort alphabetically by name
+        },
+        {
+            "$skip": skip  # Pagination: skip to current page
+        },
+        {
+            "$limit": page_size  # Pagination: limit to page size
+        },
     ]
     
     # Get total count for pagination info
